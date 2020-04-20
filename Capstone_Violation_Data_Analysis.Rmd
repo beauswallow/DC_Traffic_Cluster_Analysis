@@ -1,0 +1,344 @@
+---
+title: "Untitled"
+output: html_document
+---
+#Loading relevant libraries
+```{r}
+library(rgdal)
+library(raster)
+library(ggmap)
+library(lubridate)
+library(sf)
+library(ggplot2)
+library(maps)
+library(mapdata)
+library(sp)
+```
+
+####Reading 2016
+```{r}
+#Reading in Violations for 2016
+violation.jan.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2016.csv")
+violation.feb.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2016.csv")
+violation.mar.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2016.csv")
+violation.april.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2016.csv")
+violation.may.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2016.csv")
+violation.june.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2016.csv")
+violation.july.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2016.csv")
+violation.aug.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2016.csv")
+violation.sep.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2016.csv")
+violation.oct.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2016.csv")
+violation.nov.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2016.csv")
+violation.dec.2016<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2016.csv")
+```
+####Binding 2016
+```{r}
+#Binding 2016 Violations to create one vertical table
+violations2016a<-rbind(violation.jan.2016, violation.feb.2016)
+violations2016b<-rbind(violations2016a, violation.mar.2016)
+violations2016c<-rbind(violations2016b, violation.april.2016)
+violations2016d<-rbind(violations2016c, violation.may.2016)
+violations2016e<-rbind(violations2016d, violation.june.2016)
+violations2016f<-rbind(violations2016e, violation.july.2016)
+violations2016g<-rbind(violations2016f, violation.aug.2016)
+violations2016h<-rbind(violations2016g, violation.sep.2016)
+violations2016i<-rbind(violations2016h, violation.oct.2016)
+violations2016j<-rbind(violations2016i, violation.nov.2016)
+violations2016k<-rbind(violations2016j, violation.dec.2016)
+#Rename Violations 2016 data
+violations2016<-violations2016k
+```
+
+####Reading 2017
+```{r}
+#Reading in Violations for 2017
+violation.jan.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2017.csv")
+violation.feb.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2017.csv")
+violation.mar.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2017.csv")
+violation.april.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2017.csv")
+violation.may.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2017.csv")
+violation.june.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2017.csv")
+violation.july.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2017.csv")
+violation.aug.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2017.csv")
+violation.sep.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2017.csv")
+violation.oct.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2017.csv")
+violation.nov.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2017.csv")
+violation.dec.2017<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2017.csv")
+```
+####Binding 2017
+```{r}
+#Binding 2017 Violations to create one vertical table
+violations2017a<-rbind(violation.jan.2017, violation.feb.2017)
+violations2017b<-rbind(violations2017a, violation.mar.2017)
+violations2017c<-rbind(violations2017b, violation.april.2017)
+violations2017d<-rbind(violations2017c, violation.may.2017)
+violations2017e<-rbind(violations2017d, violation.june.2017)
+violations2017f<-rbind(violations2017e, violation.july.2017)
+violations2017g<-rbind(violations2017f, violation.aug.2017)
+violations2017h<-rbind(violations2017g, violation.sep.2017)
+violations2017i<-rbind(violations2017h, violation.oct.2017)
+violations2017j<-rbind(violations2017i, violation.nov.2017)
+violations2017k<-rbind(violations2017j, violation.dec.2017)
+#Rename Violations 2017 data
+violations2017<-violations2017k
+```
+
+####Reading 2018
+```{r}
+#Reading in Violations for 2018
+violation.jan.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2018.csv")
+violation.feb.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2018.csv")
+violation.mar.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2018.csv")
+violation.april.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2018.csv")
+violation.may.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2018.csv")
+violation.june.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2018.csv")
+violation.july.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2018.csv")
+violation.aug.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2018.csv")
+violation.sep.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2018.csv")
+violation.oct.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2018.csv")
+#
+violation.nov.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2018.csv")
+violation.dec.2018<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2018.csv")
+```
+####Binding 2018
+```{r}
+#Quick Preclean for unneccessary column
+violation.nov.2018$ROW_<-NULL
+#Binding 2018 Violations to create one vertical table
+violations2018a<-rbind(violation.jan.2018, violation.feb.2018)
+violations2018b<-rbind(violations2018a, violation.mar.2018)
+violations2018c<-rbind(violations2018b, violation.april.2018)
+violations2018d<-rbind(violations2018c, violation.may.2018)
+violations2018e<-rbind(violations2018d, violation.june.2018)
+violations2018f<-rbind(violations2018e, violation.july.2018)
+violations2018g<-rbind(violations2018f, violation.aug.2018)
+violations2018h<-rbind(violations2018g, violation.sep.2018)
+violations2018i<-rbind(violations2018h, violation.oct.2018)
+violations2018j<-rbind(violations2018i, violation.nov.2018)
+violations2018k<-rbind(violations2018j, violation.dec.2018)
+#Rename Violations 2018 data
+violations2018<-violations2018k
+```
+
+
+####Reading 2019
+```{r}
+#Reading in Violations for 2019
+violation.jan.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2019.csv")
+violation.feb.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2019.csv")
+violation.mar.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2019.csv")
+violation.april.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2019.csv")
+violation.may.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2019.csv")
+violation.june.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2019.csv")
+violation.july.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2019.csv")
+violation.aug.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2019.csv")
+violation.sep.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2019.csv")
+violation.oct.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2019.csv")
+violation.nov.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2019.csv")
+violation.dec.2019<-read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2019.csv")
+```
+####Precleaning 2019 for binding, this variable is only in July 2019 onward and isn't useful
+```{r}
+violation.july.2019$VIOLATION_TYPE_DESC<-NULL
+violation.aug.2019$VIOLATION_TYPE_DESC<-NULL
+violation.sep.2019$VIOLATION_TYPE_DESC<-NULL
+violation.oct.2019$VIOLATION_TYPE_DESC<-NULL
+violation.nov.2019$VIOLATION_TYPE_DESC<-NULL
+violation.dec.2019$VIOLATION_TYPE_DESC<-NULL
+```
+
+####Binding 2019
+```{r}
+#Binding 2019 Violations to create one vertical table
+violations2019a<-rbind(violation.jan.2019, violation.feb.2019)
+violations2019b<-rbind(violations2019a, violation.mar.2019)
+violations2019c<-rbind(violations2019b, violation.april.2019)
+violations2019d<-rbind(violations2019c, violation.may.2019)
+violations2019e<-rbind(violations2019d, violation.june.2019)
+violations2019f<-rbind(violations2019e, violation.july.2019)
+violations2019g<-rbind(violations2019f, violation.aug.2019)
+violations2019h<-rbind(violations2019g, violation.sep.2019)
+violations2019i<-rbind(violations2019h, violation.oct.2019)
+violations2019j<-rbind(violations2019i, violation.nov.2019)
+violations2019k<-rbind(violations2019j, violation.dec.2019)
+#Rename Violations 2019 data
+violations2019<-violations2019k
+```
+
+#Cleaning the dates for all 4
+```{r}
+#Making Date Column cleaner
+violations2016$ISSUE_DATE<-as.Date(violations2016$ISSUE_DATE)
+violations2017$ISSUE_DATE<-as.Date(violations2017$ISSUE_DATE)
+#violations2018$ISSUE_DATE<-as.Date(violations2018$ISSUE_DATE)
+violations2019$ISSUE_DATE<-as.Date(violations2019$ISSUE_DATE)
+#Removing unneccessary columns for 2016
+violations2016$ISSUING_AGENCY_CODE<-NULL
+violations2016$ISSUING_AGENCY_NAME<-NULL
+violations2016$ISSUING_AGENCY_SHORT<-NULL
+violations2016$DISPOSITION_CODE<-NULL
+violations2016$DISPOSITION_TYPE<-NULL
+violations2016$DISPOSITION_DATE<-NULL
+violations2016$FINE_AMOUNT<-NULL
+violations2016$TOTAL_PAID<-NULL
+violations2016$PENALTY_1<-NULL
+violations2016$PENALTY_2<-NULL
+violations2016$PENALTY_3<-NULL
+violations2016$PENALTY_4<-NULL
+violations2016$PENALTY_5<-NULL
+violations2016$RP_MULT_OWNER_NO<-NULL
+violations2016$GIS_LAST_MOD_DTTM<-NULL
+#Removing unneccessary columns for 2017
+violations2017$ISSUING_AGENCY_CODE<-NULL
+violations2017$ISSUING_AGENCY_NAME<-NULL
+violations2017$ISSUING_AGENCY_SHORT<-NULL
+violations2017$DISPOSITION_CODE<-NULL
+violations2017$DISPOSITION_TYPE<-NULL
+violations2017$DISPOSITION_DATE<-NULL
+violations2017$FINE_AMOUNT<-NULL
+violations2017$TOTAL_PAID<-NULL
+violations2017$PENALTY_1<-NULL
+violations2017$PENALTY_2<-NULL
+violations2017$PENALTY_3<-NULL
+violations2017$PENALTY_4<-NULL
+violations2017$PENALTY_5<-NULL
+violations2017$RP_MULT_OWNER_NO<-NULL
+violations2017$GIS_LAST_MOD_DTTM<-NULL
+#Removing unneccessary columns for 2018
+#violations2018$ISSUING_AGENCY_CODE<-NULL
+#violations2018$ISSUING_AGENCY_NAME<-NULL
+#violations2018$ISSUING_AGENCY_SHORT<-NULL
+#violations2018$DISPOSITION_CODE<-NULL
+#violations2018$DISPOSITION_TYPE<-NULL
+#violations2018$DISPOSITION_DATE<-NULL
+#violations2018$FINE_AMOUNT<-NULL
+#violations2018$TOTAL_PAID<-NULL
+#violations20187$PENALTY_1<-NULL
+#violations2018$PENALTY_2<-NULL
+#violations2018$PENALTY_3<-NULL
+#violations2018$PENALTY_4<-NULL
+#violations2018$PENALTY_5<-NULL
+#violations2018$RP_MULT_OWNER_NO<-NULL
+#violations2018$GIS_LAST_MOD_DTTM<-NULL
+#Removing unneccessary columns for2019
+violations2019$ISSUING_AGENCY_CODE<-NULL
+violations2019$ISSUING_AGENCY_NAME<-NULL
+violations2019$ISSUING_AGENCY_SHORT<-NULL
+violations2019$DISPOSITION_CODE<-NULL
+violations2019$DISPOSITION_TYPE<-NULL
+violations2019$DISPOSITION_DATE<-NULL
+violations2019$FINE_AMOUNT<-NULL
+violations2019$TOTAL_PAID<-NULL
+violations2019$PENALTY_1<-NULL
+violations2019$PENALTY_2<-NULL
+violations2019$PENALTY_3<-NULL
+violations2019$PENALTY_4<-NULL
+violations2019$PENALTY_5<-NULL
+violations2019$RP_MULT_OWNER_NO<-NULL
+violations2019$GIS_LAST_MOD_DTTM<-NULL
+```
+
+
+#Reordering columns so Latitude and Longitude are columns 1 and 2
+```{r}
+violations20162 <- violations2016[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+violations2016<-violations20162
+violations20172 <- violations2017[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+violations2017<-violations20172
+#violations20182 <- violations2018[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+#violations2018<-violations20182
+violations20192 <- violations2019[, c(11, 10, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 12, 13, 14, 15)]
+violations2019<-violations20192
+```
+
+#head(violations20182)
+
+#Eliminating NA/NAN/Inf values for kmeans() analysis
+```{r}
+violations2016<-na.omit(violations2016)
+violations2017<-na.omit(violations2017)
+#violations2018<-na.omit(violations2018)
+violations2019<-na.omit(violations2019)
+```
+
+
+#Summary Statistics
+- Changed all functions to head() so it would knit correctly.
+```{r}
+head(violations2016)
+#1,154,050 violations for 2016 with NA
+#1,033,269 violations for 2016 omitting NA
+```
+
+
+```{r}
+head(violations2017)
+#1,337,742 violations for 2017
+#1,201,375 violations for 2017 omitting NA
+```
+
+```{r}
+#violations2018
+#1,XXX,XXX violations for 2018
+#1,XXX,XXX violations for 2018 omitting NA
+```
+
+```{r}
+head(violations2019)
+#1,287,967 violations for 2019
+#919,606  violations for 2019 omitting NA
+```
+
+#Merging the four years of datasets
+```{r}
+#violations_a<-rbind(violations2016, violations2017)
+#violations_b<-rbind(violations_a, violations2018)
+#violations_c<-rbind(violations_b, violations2019)
+#Renaming
+#violations<-violations_c
+```
+
+#Sample the four years of violations
+```{r}
+violation_sample_2016<-violations2016[sample(nrow(violations2016),1000),]
+violation_sample_2017<-violations2017[sample(nrow(violations2016),1000),]
+#violation_sample_2018<-violations2018[sample(nrow(violations2016),1000),]
+violation_sample_2019<-violations2019[sample(nrow(violations2016),1000),]
+```
+
+#DC map using ggmap library
+```{r}
+myLocation <- c(-77.1198, 38.79164, -76.90915, 38.99597)
+myMap <- get_map(location=myLocation,
+source="stamen", maptype="watercolor", crop=FALSE)
+```
+#Plotting 2016 Traffic Violations
+```{r}
+ggmap(myMap)+
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violations2016,
+ alpha = .25, color="darkred", size = 1) +
+ggtitle("Traffic Violations in DC 2016")
+```
+
+#Plotting Sample of 2016 Traffic Violations
+```{r}
+ggmap(myMap)+
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violation_sample_2016,
+ alpha = .5, color="darkred", size = 1) +
+ggtitle("Sample of Traffic Violations in DC 2016")
+```
+
+#Creating Clusters for the 2016 Violations Sample dataset
+```{r}
+set.seed(20)
+clusters <- kmeans(violation_sample_2016[,1:2], 7)
+violation_sample_2016$ward_c <- as.factor(clusters$cluster)
+```
+
+#Plotting the Clusters for the  2016 Violations Sample dataset
+```{r}
+ggmap(myMap) + geom_point(aes(x = LONGITUDE[], y = LATITUDE[], colour = as.factor(ward_c)),data = violation_sample_2016) +
+  ggtitle("Clusters for Sample of 2016 Violations using KMeans")
+```
+
+
