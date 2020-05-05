@@ -1,0 +1,894 @@
+---
+title: "Beau Swallow Capstone: DC Traffic Incident Analysis"
+output: pdf_document
+---
+#Abstract
+
+In an effort to find out the composition of traffic violations and crashes in Washington DC using public data, we found that some factors are potentially associated with higher levels of crashes and violations. Crashes, Violations and Cameras all had a statistically significant relationship with eachother which supported the hypothesis asserting the relationship. Median income did not have a statistically significant effect on crashes or violations when it was the sole predictor but when added to the full model, the relationship was more significant than the other models. This partially supports my hypothesis that higher income led to more crashes and violations but not enough to reject a null hypothesis. My hypothesis for my explanatory questions regarding cameras placement lowering violation and crash rate was rejected as the relationship was opposite and likely biased due to the amount of cameras in DC.
+
+#Introduction
+
+This capstone seeks to paint a picture of the current traffic climate in DC in regards to crashes, violations, and traffic cameras and the potential relationship they have with eachother.  The data spans from 2016-2019 to create a four year representative sample that is recent and large enough to draw conclusions. The data comes from over 40 datasets and is eventually joined into one comprehensive dataset. The sheer number of observations from the final dataset amounts to 4 million observations so samples of each year were taken to bring the population to a manageable number for analysis. The census block and tracts data are from 2010 as that is the last availible census dataset availible on opendata dc. With the most up to date public data, we can understand the current situation regarding traffic crashes and violations in an effort to make Wasington DC a safer city to live in.
+
+#Research Design
+
+Some of the questions I sought out to answer were related to the variables availible in the public data. This included crashes, violations, and cameras. Later I found census data that contained census block and tract information that included median income for a block. Below were the empirical and explanatory hypothesis I wanted to answer at the outset of the project.
+
+####Hypothesis for Empirical Questions:
+
+Do areas in the District with more traffic violations tend to have more accidents?
+
+- Hypothesis: Areas that have more traffic violations on average tend to have more accidents.
+
+Does the median income of a census tract tend to be correlated with more accidents?
+
+- Hypothesis: Census tracts with more higher median income tend to have more accidents.
+
+####Hypothesis for Exploratory Questions:
+
+Do blocks in the District with cameras tend to have fewer accidents?
+
+- Hypothesis: Areas that have more traffic traffic cameras on average tend to have fewer accidents.
+
+Do blocks in the District with cameras tend to have fewer violations?
+
+- Hypothesis: Areas that have more traffic traffic cameras on average tend to have fewer violations.
+
+#Data Cleaning and Analysis
+One of the biggest obstacles to data analysis was the public data needing to be cleaned, wrangled, read in, and binded to allow for analysis. The following data cleaning section shows my code and steps for tidying this data. This section is also included with Analysis as the lines between cleaning data and analyzing data become murkier later in the proces.
+
+####Loading relevant libraries
+```{r, message=FALSE}
+library(rgdal)
+library(raster)
+library(ggmap)
+library(lubridate)
+library(sf)
+library(ggplot2)
+library(maps)
+library(mapdata)
+library(sp)
+library(tidyverse)
+library(RColorBrewer)
+library(patchwork)
+library(here)
+library(rgeos)
+library(dplyr)
+library(reshape2)
+library(car)
+```
+
+####Reading 2016
+```{r}
+#Reading in Violations for 2016
+violation.jan.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2016.csv")
+violation.feb.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2016.csv")
+violation.mar.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2016.csv")
+violation.april.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2016.csv")
+violation.may.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2016.csv")
+violation.june.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2016.csv")
+violation.july.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2016.csv")
+violation.aug.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2016.csv")
+violation.sep.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2016.csv")
+violation.oct.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2016.csv")
+violation.nov.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2016.csv")
+violation.dec.2016 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2016.csv")
+```
+####Binding 2016
+```{r}
+#Binding 2016 Violations to create one vertical table
+violations2016a <- rbind(violation.jan.2016, violation.feb.2016)
+violations2016b <- rbind(violations2016a, violation.mar.2016)
+violations2016c <- rbind(violations2016b, violation.april.2016)
+violations2016d <- rbind(violations2016c, violation.may.2016)
+violations2016e <- rbind(violations2016d, violation.june.2016)
+violations2016f <- rbind(violations2016e, violation.july.2016)
+violations2016g <- rbind(violations2016f, violation.aug.2016)
+violations2016h <- rbind(violations2016g, violation.sep.2016)
+violations2016i <- rbind(violations2016h, violation.oct.2016)
+violations2016j <- rbind(violations2016i, violation.nov.2016)
+violations2016k <- rbind(violations2016j, violation.dec.2016)
+#Rename Violations 2016 data
+violations2016 <- violations2016k
+```
+
+####Reading 2017
+```{r}
+#Reading in Violations for 2017
+violation.jan.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2017.csv")
+violation.feb.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2017.csv")
+violation.mar.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2017.csv")
+violation.april.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2017.csv")
+violation.may.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2017.csv")
+violation.june.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2017.csv")
+violation.july.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2017.csv")
+violation.aug.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2017.csv")
+violation.sep.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2017.csv")
+violation.oct.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2017.csv")
+violation.nov.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2017.csv")
+violation.dec.2017 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2017.csv")
+```
+####Binding 2017
+```{r}
+#Binding 2017 Violations to create one vertical table
+violations2017a <- rbind(violation.jan.2017, violation.feb.2017)
+violations2017b <- rbind(violations2017a, violation.mar.2017)
+violations2017c <- rbind(violations2017b, violation.april.2017)
+violations2017d <- rbind(violations2017c, violation.may.2017)
+violations2017e <- rbind(violations2017d, violation.june.2017)
+violations2017f <- rbind(violations2017e, violation.july.2017)
+violations2017g <- rbind(violations2017f, violation.aug.2017)
+violations2017h <- rbind(violations2017g, violation.sep.2017)
+violations2017i <- rbind(violations2017h, violation.oct.2017)
+violations2017j <- rbind(violations2017i, violation.nov.2017)
+violations2017k <- rbind(violations2017j, violation.dec.2017)
+#Rename Violations 2017 data
+violations2017<-violations2017k
+```
+
+####Reading 2018
+```{r}
+#Reading in Violations for 2018
+violation.jan.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2018.csv")
+violation.feb.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2018.csv")
+violation.mar.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2018.csv")
+violation.april.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2018.csv")
+violation.may.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2018.csv")
+violation.june.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2018.csv")
+violation.july.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2018.csv")
+violation.aug.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2018.csv")
+violation.sep.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2018.csv")
+violation.oct.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2018.csv")
+violation.nov.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2018.csv")
+violation.dec.2018 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2018.csv")
+```
+####Binding 2018
+```{r}
+#Binding 2018 Violations to create one vertical table
+violations2018a <- rbind(violation.jan.2018, violation.feb.2018)
+violations2018b <- rbind(violations2018a, violation.mar.2018)
+violations2018c <- rbind(violations2018b, violation.april.2018)
+violations2018d <- rbind(violations2018c, violation.may.2018)
+violations2018e <- rbind(violations2018d, violation.june.2018)
+violations2018f <- rbind(violations2018e, violation.july.2018)
+violations2018g <- rbind(violations2018f, violation.aug.2018)
+violations2018h <- rbind(violations2018g, violation.sep.2018)
+violations2018i <- rbind(violations2018h, violation.oct.2018)
+violations2018j <- rbind(violations2018i, violation.nov.2018)
+violations2018k <- rbind(violations2018j, violation.dec.2018)
+#Rename Violations 2018 data
+violations2018 <- violations2018k
+```
+
+####Reading 2019
+```{r}
+#Reading in Violations for 2019
+violation.jan.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_January_2019.csv")
+violation.feb.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_February_2019.csv")
+violation.mar.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_March_2019.csv")
+violation.april.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_April_2019.csv")
+violation.may.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_May_2019.csv")
+violation.june.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_June_2019.csv")
+violation.july.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_July_2019.csv")
+violation.aug.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_August_2019.csv")
+violation.sep.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_September_2019.csv")
+violation.oct.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_October_2019.csv")
+violation.nov.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_November_2019.csv")
+violation.dec.2019 <- read.csv("/Users/BeauSwallow/Downloads/Moving_Violations_Issued_in_December_2019.csv")
+```
+
+####Precleaning 2019 for binding, this variable is only in July 2019 onward and isn't useful
+```{r}
+violation.july.2019$VIOLATION_TYPE_DESC <- NULL
+violation.aug.2019$VIOLATION_TYPE_DESC <- NULL
+violation.sep.2019$VIOLATION_TYPE_DESC <- NULL
+violation.oct.2019$VIOLATION_TYPE_DESC <- NULL
+violation.nov.2019$VIOLATION_TYPE_DESC <- NULL
+violation.dec.2019$VIOLATION_TYPE_DESC <- NULL
+```
+
+####Binding 2019
+```{r}
+#Binding 2019 Violations to create one vertical table
+violations2019a <- rbind(violation.jan.2019, violation.feb.2019)
+violations2019b <- rbind(violations2019a, violation.mar.2019)
+violations2019c <- rbind(violations2019b, violation.april.2019)
+violations2019d <- rbind(violations2019c, violation.may.2019)
+violations2019e <- rbind(violations2019d, violation.june.2019)
+violations2019f <- rbind(violations2019e, violation.july.2019)
+violations2019g <- rbind(violations2019f, violation.aug.2019)
+violations2019h <- rbind(violations2019g, violation.sep.2019)
+violations2019i <- rbind(violations2019h, violation.oct.2019)
+violations2019j <- rbind(violations2019i, violation.nov.2019)
+violations2019k <- rbind(violations2019j, violation.dec.2019)
+#Rename Violations 2019 data
+violations2019 <- violations2019k
+```
+
+####Cleaning the dates for all 4
+```{r}
+#Making Date Column cleaner
+violations2016$ISSUE_DATE <- as.Date(violations2016$ISSUE_DATE)
+violations2017$ISSUE_DATE <- as.Date(violations2017$ISSUE_DATE)
+violations2018$ISSUE_DATE <- as.Date(violations2018$ISSUE_DATE)
+violations2019$ISSUE_DATE <- as.Date(violations2019$ISSUE_DATE)
+#Removing unneccessary columns for 2016
+violations2016$ISSUING_AGENCY_CODE <- NULL
+violations2016$ISSUING_AGENCY_NAME <- NULL
+violations2016$ISSUING_AGENCY_SHORT <- NULL
+violations2016$DISPOSITION_CODE <- NULL
+violations2016$DISPOSITION_TYPE <- NULL
+violations2016$DISPOSITION_DATE <- NULL
+violations2016$FINE_AMOUNT <- NULL
+violations2016$TOTAL_PAID <- NULL
+violations2016$PENALTY_1 <- NULL
+violations2016$PENALTY_2 <- NULL
+violations2016$PENALTY_3 <- NULL
+violations2016$PENALTY_4 <- NULL
+violations2016$PENALTY_5 <- NULL
+violations2016$RP_MULT_OWNER_NO <- NULL
+violations2016$GIS_LAST_MOD_DTTM <- NULL
+violations2016$LATITUDE.1 <- NULL
+#Removing unneccessary columns for 2017
+violations2017$ISSUING_AGENCY_CODE <- NULL
+violations2017$ISSUING_AGENCY_NAME <- NULL
+violations2017$ISSUING_AGENCY_SHORT <- NULL
+violations2017$DISPOSITION_CODE <- NULL
+violations2017$DISPOSITION_TYPE <- NULL
+violations2017$DISPOSITION_DATE <- NULL
+violations2017$FINE_AMOUNT <- NULL
+violations2017$TOTAL_PAID <- NULL
+violations2017$PENALTY_1 <- NULL
+violations2017$PENALTY_2 <- NULL
+violations2017$PENALTY_3 <- NULL
+violations2017$PENALTY_4 <- NULL
+violations2017$PENALTY_5 <- NULL
+violations2017$RP_MULT_OWNER_NO <- NULL
+violations2017$GIS_LAST_MOD_DTTM <- NULL
+violations2017$LATITUDE.1 <- NULL
+#Removing unneccessary columns for 2018
+violations2018$ISSUING_AGENCY_CODE <- NULL
+violations2018$ISSUING_AGENCY_NAME <- NULL
+violations2018$ISSUING_AGENCY_SHORT <- NULL
+violations2018$DISPOSITION_CODE <- NULL
+violations2018$DISPOSITION_TYPE <- NULL
+violations2018$DISPOSITION_DATE <- NULL
+violations2018$FINE_AMOUNT <- NULL
+violations2018$TOTAL_PAID <- NULL
+violations2018$PENALTY_1 <- NULL
+violations2018$PENALTY_2 <- NULL
+violations2018$PENALTY_3 <- NULL
+violations2018$PENALTY_4 <- NULL
+violations2018$PENALTY_5 <- NULL
+violations2018$RP_MULT_OWNER_NO <- NULL
+violations2018$GIS_LAST_MOD_DTTM <- NULL
+violations2018$LATITUDE.1 <- NULL
+#Removing unneccessary columns for2019
+violations2019$ISSUING_AGENCY_CODE <- NULL
+violations2019$ISSUING_AGENCY_NAME <- NULL
+violations2019$ISSUING_AGENCY_SHORT <- NULL
+violations2019$DISPOSITION_CODE <- NULL
+violations2019$DISPOSITION_TYPE <- NULL
+violations2019$DISPOSITION_DATE <- NULL
+violations2019$FINE_AMOUNT <- NULL
+violations2019$TOTAL_PAID <- NULL
+violations2019$PENALTY_1 <- NULL
+violations2019$PENALTY_2 <- NULL
+violations2019$PENALTY_3 <- NULL
+violations2019$PENALTY_4 <- NULL
+violations2019$PENALTY_5 <- NULL
+violations2019$RP_MULT_OWNER_NO <- NULL
+violations2019$GIS_LAST_MOD_DTTM <- NULL
+```
+
+####Reordering columns so Latitude and Longitude are columns 1 and 2
+```{r}
+violations20162 <- violations2016[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+violations2016 <- violations20162
+violations20172 <- violations2017[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+violations2017 <- violations20172
+violations20182 <- violations2018[, c(13, 14, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 15)]
+violations2018 <- violations20182
+violations20192 <- violations2019[, c(10, 11, 1, 2, 3, 4, 5, 6 ,7, 8, 9, 12, 13, 14, 15)]
+violations2019 <- violations20192
+```
+
+####Eliminating NA/NAN/Inf values
+```{r}
+violations2016 <- na.omit(violations2016)
+violations2017 <- na.omit(violations2017)
+violations2018 <- na.omit(violations2018)
+violations2019 <- na.omit(violations2019)
+```
+
+####Summary Statistics
+- Changed all functions to head() so it would knit correctly.
+```{r}
+head(violations2016)
+#1,033,269 violations for 2016
+#1,201,375 violations for 2017
+#1,211,344  violations for 2018
+#919,606  violations for 2019
+#4,365,594 violations for 2016-2019 timeframe
+```
+
+- The above summary statistics show the total amount of violations in each year as well as the amount for the entire timeframe. 4,365,594 violations is alot to plot so a sample will be neccessary to make the plotting easier on the computer.
+
+####Getting rid of this column in an individual chunk due to redundanct
+```{r}
+violations2016$LATITUDE.1 <- NULL
+violations2017$LATITUDE.1 <- NULL
+violations2018$LATITUDE.1 <- NULL
+#This code is in the cleaning names chunk but my paper will not knit if I do not have this separate chunk as well.
+```
+
+####Merging the four years of datasets to create one violations dataset
+```{r}
+violations_a <- rbind(violations2016, violations2017)
+violations_b <- rbind(violations_a, violations2018)
+violations_c <- rbind(violations_b, violations2019)
+#Renaming
+violations<-violations_c
+```
+
+####Sample the four years of violations
+```{r}
+#Individual Samples for each year
+violation_sample_2016 <- violations2016[sample(nrow(violations2016),1000),]
+violation_sample_2017 <- violations2017[sample(nrow(violations2016),1000),]
+violation_sample_2018 <- violations2018[sample(nrow(violations2016),1000),]
+violation_sample_2019 <- violations2019[sample(nrow(violations2016),1000),]
+#Creating a 2016-2019 sample
+violation_sample2_2016 <- violations2016[sample(nrow(violations2016),250),]
+violation_sample2_2017 <- violations2017[sample(nrow(violations2016),250),]
+violation_sample2_2018 <- violations2018[sample(nrow(violations2016),250),]
+violation_sample2_2019 <- violations2019[sample(nrow(violations2016),250),]
+#Merging the samples
+violations_A <- rbind(violation_sample2_2016, violation_sample2_2017)
+violations_B <- rbind(violations_A, violation_sample2_2018)
+violations_C <- rbind(violations_B, violation_sample2_2019)
+#Renaming
+violations_sample <- violations_C
+violations_sample <- na.omit(violations_sample)
+```
+
+- We now have a violations sample of size 1000, containing 250 observations from each year.
+
+####Reading in Cameras dataset
+```{r}
+#Read in cameras dataset
+cameras <- read.csv("/Users/BeauSwallow/Downloads/Traffic_Camera.csv")
+#Rename X & Y variables to Longitude and Latitude
+cameras$Longitude <- cameras$X
+cameras$Latitude <- cameras$Y
+```
+
+####Reading in Crashes dataset
+```{r}
+crashes <- read.csv("/Users/BeauSwallow/Downloads/Crashes_in_DC.csv")
+#Clean up date column
+crashes$REPORTDATE <- as.Date(crashes$REPORTDATE)
+crashes$FROMDATE <- as.Date(crashes$FROMDATE)
+#Subset by date for 2016-2019 data
+crashes <- subset(crashes, REPORTDATE > as.Date("2016-01-01") )
+```
+
+- The camera and crash datasets were considerably more clean than the violations dataset which made EDA and tidying easier.
+
+####Sampling Crashes
+```{r}
+crashes1 <- crashes[sample(nrow(crashes),1000),]
+```
+
+####Pulling in the DC map using ggmap library
+```{r,message=FALSE}
+myLocation <- c(-77.1198, 38.79164, -76.90915, 38.99597)
+myMap <- get_map(location=myLocation,
+source="stamen", maptype="watercolor", crop=FALSE)
+```
+
+#####Plotting 2016-2019 Traffic Violations
+```{r, out.width = "400px"}
+#ggmap(myMap)+
+#geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violations,
+ #alpha = .25, color="darkred", size = 1) +
+#ggtitle("Traffic Violations in DC from 2016-2019")
+knitr::include_graphics("/Users/BeauSwallow/Downloads/TrafficViolScreenShot.png")
+```
+
+- To reduce computing power on knitting, I screenshotted the above plot so I don't have to rerun the violations that are not a sample.
+
+####Plotting 2016-2019 Traffic crashes
+```{r, out.width = "400px"}
+#ggmap(myMap)+
+#geom_point(aes(x = LONGITUDE, y = LATITUDE), data = crashes,
+ #alpha = .25, color="darkred", size = 0.5) +
+#ggtitle("Traffic Crashes in DC")
+knitr::include_graphics("/Users/BeauSwallow/Downloads/TrafficCrashScreenShot.png")
+```
+
+- Similar to the violations, plotting all of the crashes is cool to see but not very helpful functionally unless you change it to a density plot or plot the sample instead.
+
+####Plotting Sample of 2016 Traffic Violations
+```{r}
+ggmap(myMap)+
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violations_sample,
+ alpha = .1, color="darkred", size = 1) +
+ggtitle("Sample of Traffic Violations in DC from 2016-2019")
+```
+
+- The points here are informative and a low alpha allows hot zones to stick out but lets make a density plot to add some context to the points.
+
+####Density Plot of the Violations sample
+```{r}
+ggmap(myMap) +
+  stat_density_2d(data = violations_sample,
+                  aes(x = LONGITUDE,
+                      y = LATITUDE,
+                      fill = stat(level)),
+                  alpha = .4,
+                      bins = 10,
+                      geom = "polygon") +
+scale_fill_gradientn(colors = brewer.pal(7, "YlOrRd")) +
+  ggtitle("Density plot of DC Violations sample")
+```
+
+- Here some hot zones emerge, many being in downtown with a surprisingly high concentration in East DC on 295.
+
+####Plotting the  Crashes Sample
+```{r}
+ggmap(myMap)+
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = crashes1,
+ alpha = .5, color="darkred", size = 0.5) +
+ggtitle("Sample of Traffic Crashes in DC from 2016-2019")
+```
+
+####Density Plot of the Crash sample
+```{r}
+ggmap(myMap) +
+  stat_density_2d(data = crashes1,
+                  aes(x = LONGITUDE,
+                      y = LATITUDE,
+                      fill = stat(level)),
+                  alpha = .4,
+                      bins = 10,
+                      geom = "polygon") +
+scale_fill_gradientn(colors = brewer.pal(7, "YlOrRd"))+
+  ggtitle("Density plot of DC Crashes sample")
+```
+
+- The density plot here for crashes looks fairly similar to the violations density plot but it is more concentration downtown.
+
+####Crash Density Plot by Ward
+```{r}
+ggmap(myMap) +
+  stat_density_2d(data = crashes1 %>%
+                    filter(`WARD` %in% c("Ward 1", "Ward 2",
+                                                 "Ward 3", "Ward 4","Ward 5", "Ward 6", "Ward 7","Ward 8")),
+                  aes(x = LONGITUDE,
+                      y = LATITUDE,
+                      fill = stat(level)),
+                  alpha = .4,
+                  bins = 10,
+                  geom = "polygon") +
+  scale_fill_gradientn(colors = brewer.pal(7, "YlOrRd")) +
+  facet_wrap(~ `WARD`) +
+  ggtitle("Density plot of DC Crashes sample by Ward")
+```
+
+- The crash dataset includeds ward as a column so here is the same density plot of crashes but faceted by ward.
+
+####Creating Clusters for the 2016-2019 Violations Sample dataset
+```{r}
+set.seed(20)
+clusters <- kmeans(violations_sample[,1:2], 7)
+violations_sample$ward_c <- as.factor(clusters$cluster)
+```
+
+####Plotting the Clusters for the  2016-2019 Violations Sample dataset
+```{r}
+ggmap(myMap) + geom_point(aes(x = LONGITUDE[], y = LATITUDE[], colour = as.factor(ward_c)),data = violations_sample) +
+  ggtitle("Clusters for Sample of 2016-2019 Violations using KMeans")
+```
+
+####Plotting Camera location over Violations sample
+```{r}
+ggmap(myMap) + geom_point(aes(x = LONGITUDE[], y = LATITUDE[], colour = as.factor(ward_c)),data = violations_sample) +
+  geom_point(aes(x = Longitude, y = Latitude), data = cameras,
+ alpha = .5, color="darkred", size = 0.5) + 
+  ggtitle("Camera Location plotted over Clusters for Sample Violations")
+```
+
+#Plotting all
+```{r}
+ggmap(myMap)+
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violations_sample,
+ alpha = .2, color="orange", size = 1) +
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = crashes1,
+ alpha = .2, color="blue", size = 0.5) +
+  geom_point(aes(x = Longitude, y = Latitude), data = cameras,
+ alpha = .2, color="red", size = 0.5) + 
+ggtitle("Sample of Traffic Violations, Crashes, and Cameras in DC from 2016-2019") 
+```
+
+####Creating a polygon for points in polygon classification
+```{r}
+cameras1 <- cameras
+cameras1$Latitude <- as.numeric(cameras1$Latitude)
+cameras1$Longitude <- as.numeric(cameras1$Longitude)
+coordinates(cameras1) <- ~Latitude + Longitude
+cameraBuffer <- gBuffer(cameras1, width=.001, byid = TRUE)
+#coordinates(cameras[1:2,])
+```
+
+```{r}
+cameraBuffer
+```
+
+
+- Here is the object
+
+```{r}
+plot(cameras1)
+plot(cameraBuffer)
+#Counting the points within the buffer once I get this to work
+#count <- over(cameraBuffer, violations_sample, fn=length)
+#count <- over(cameraBuffer, crashes1, fn=length)
+```
+
+####Reading in the census Map with blocks
+```{r}
+censusmap <- readOGR(dsn = "/Users/BeauSwallow/Downloads/MyShapefileDir/Census_Blocks__2010", layer = "Census_Blocks__2010")
+```
+
+####Reading in census map with tracts
+```{r}
+censustract <- readOGR(dsn = "/Users/BeauSwallow/Downloads/Demographic_Group_Layers-shp")
+```
+
+```{r}
+censusmap1 <- st_read(
+  "/Users/BeauSwallow/Downloads//MyShapefileDir/Census_Blocks__2010/Census_Blocks__2010.shp")
+```
+
+####Plotting the violations, crashes and cameras over the block shapefile.
+```{r}
+ggplot() + 
+  geom_sf(data = censusmap1, size = .1, color = "black", fill = "white") + 
+  geom_point(aes(x = LONGITUDE, y = LATITUDE), data = violations_sample,
+ alpha = .5, color="orange", size = .1) +
+geom_point(aes(x = LONGITUDE, y = LATITUDE), data = crashes1,
+ alpha = .5, color="blue", size = 0.1) +
+  geom_point(aes(x = Longitude, y = Latitude), data = cameras,
+ alpha = .5, color="red", size = 0.1) + 
+  ggtitle("Violations, Crashes, Cameras plotted with blocks") + 
+  coord_sf()
+```
+
+####Making a dataframe version of census map for plotting
+```{r}
+censusmap_df <- fortify(censusmap)
+```
+```{r}
+ggplot(censusmap_df) + 
+  aes(long,lat) + 
+  geom_polygon() +
+  coord_equal()
+```
+
+####Checking the coordinate system of the map
+```{r}
+censusmap@proj4string
+```
+
+```{r}
+censustract@proj4string
+```
+
+####Turning the dataframe into a spatial points data frame
+```{r}
+#For the violations sample
+violations_sample1 <- violations_sample
+coordinates(violations_sample1) <- ~LONGITUDE+LATITUDE
+as(violations_sample1,"SpatialPoints")
+```
+
+```{r}
+#For the crash sample
+crashes1$TODATE<-NULL
+crashes2 <- crashes1
+coordinates(crashes2) <- ~LONGITUDE+LATITUDE
+as(crashes2,"SpatialPoints")
+```
+
+```{r}
+#For the cameras
+cameras1 <- cameras
+coordinates(cameras1) <- ~Longitude+Latitude
+as(cameras1,"SpatialPoints")
+```
+
+####Ensuring they are on same coordinates system
+```{r}
+#For violations
+proj4string(violations_sample1) <- CRS("+proj=longlat +datum=WGS84")
+proj4string(violations_sample1) <- proj4string(censusmap)
+```
+
+```{r}
+#For crashes
+proj4string(crashes2) <- CRS("+proj=longlat +datum=WGS84")
+proj4string(crashes2) <- proj4string(censusmap)
+```
+
+```{r}
+#For cameras
+proj4string(cameras1) <- CRS("+proj=longlat +datum=WGS84")
+proj4string(cameras1) <- proj4string(censusmap)
+```
+
+####Run Points in polygon algorithm
+```{r}
+#For Block
+pointsinpoly <- over(violations_sample1,censusmap)
+pointsinpoly2 <- over(crashes2,censusmap)
+pointsinpoly3 <- over(cameras1,censusmap)
+```
+
+```{r}
+#For Tract
+pointsinpoly4 <- over(violations_sample1,censustract)
+pointsinpoly5 <- over(crashes2,censustract)
+pointsinpoly6 <- over(cameras1,censustract)
+```
+
+####Omitting NA values from the output and adding Tract to the dataframes
+```{r}
+outputX <- na.omit(cbind(violations_sample1@data, violations_sample1@coords, pointsinpoly4$TRACT, pointsinpoly4$FAGI_MED_5))
+outputY <- na.omit(cbind(crashes2@data, crashes2@coords, pointsinpoly5$TRACT, pointsinpoly5$FAGI_MED_5))
+outputZ <- na.omit(cbind(cameras1@data, cameras1@coords, pointsinpoly6$TRACT, pointsinpoly6$FAGI_MED_5))
+#Renaming Block variable
+outputX <- rename(outputX, c("TRACT"="pointsinpoly4$TRACT"))
+outputY <- rename(outputY, c("TRACT"="pointsinpoly5$TRACT"))
+outputZ <- rename(outputZ, c("TRACT"="pointsinpoly6$TRACT"))
+outputX <- rename(outputX, c("Median_income"="pointsinpoly4$FAGI_MED_5"))
+outputY <- rename(outputY, c("Median_income"="pointsinpoly5$FAGI_MED_5"))
+outputZ <- rename(outputZ, c("Median_income"="pointsinpoly6$FAGI_MED_5"))
+outputZ <- rename(outputZ, c("LATITUDE"="Latitude"))
+outputZ <- rename(outputZ, c("LONGITUDE"="Longitude"))
+```
+
+####Omitting NA values from the output and adding block to the dataframes
+```{r}
+output <- na.omit(cbind(violations_sample1@data, violations_sample1@coords, pointsinpoly$BLOCK))
+output2 <- na.omit(cbind(crashes2@data, crashes2@coords, pointsinpoly2$BLOCK))
+output3 <- na.omit(cbind(cameras1@data, cameras1@coords, pointsinpoly3$BLOCK))
+#Renaming Block variable
+output <- rename(output, c("BLOCK"="pointsinpoly$BLOCK"))
+output2 <- rename(output2, c("BLOCK"="pointsinpoly2$BLOCK"))
+output3 <- rename(output3, c("BLOCK"="pointsinpoly3$BLOCK"))
+output3 <- rename(output3, c("LATITUDE"="Latitude"))
+output3 <- rename(output3, c("LONGITUDE"="Longitude"))
+```
+
+- Here I have added Block group to each dataset, every observation is now assigned to a block.
+
+####Violations by block
+```{r}
+summary(output$BLOCK)
+```
+
+####Crashes by block
+```{r}
+summary(output2$BLOCK)
+```
+
+####Cameras by block
+```{r}
+summary(output3$BLOCK)
+```
+
+- Using the above summary functions, I can find which blocks have the most crashes, violations, and cameras.
+
+####Making a common variable for joining
+```{r}
+output$TYPE <- "Violation"
+output2$TYPE <- "Crash"
+output3$TYPE <- "Camera"
+```
+
+```{r}
+outputX$TYPE <- "Violation"
+outputY$TYPE <- "Crash"
+outputZ$TYPE <- "Camera"
+```
+
+####Making a date column for the camera data so it is able to join into the table
+```{r}
+output$REPORTDATE<-output$ISSUE_DATE
+output3$REPORTDATE<-"2016-01-01"
+output3$REPORTDATE<-as.Date(output3$REPORTDATE)
+```
+
+```{r}
+outputX$REPORTDATE<-outputX$ISSUE_DATE
+outputZ$REPORTDATE<-"2016-01-01"
+outputZ$REPORTDATE<-as.Date(outputZ$REPORTDATE)
+```
+
+####Making a common dataframe
+```{r}
+myvars <- c("LONGITUDE","LATITUDE","BLOCK","TYPE","REPORTDATE")
+output.a <- output[myvars]
+output.2a <- output2[myvars]
+output.3a <- output3[myvars]
+output.4a <- rbind(output.a,output.2a)
+output.f <- rbind(output.4a,output.3a)
+```
+
+```{r}
+myvars <- c("LONGITUDE","LATITUDE","TRACT","TYPE","REPORTDATE","Median_income")
+output.xa <- outputX[myvars]
+output.2xa <- outputY[myvars]
+output.3xa <- outputZ[myvars]
+output.4xa <- rbind(output.xa,output.2xa)
+output.fx <- rbind(output.4xa,output.3xa)
+```
+
+####Merging the block and tract dataframes to be one dataframe
+```{r}
+total <- merge(output.f,output.fx,by=c("LONGITUDE","LATITUDE","TYPE","REPORTDATE"))
+head(total)
+```
+
+- One problem I encountered here is that some blocks overlap into other tracts meaning some blocks might have different median. This means that regression will be done by census tracts to get a reliable median income variable.
+
+####Violation, Crashes and Cameras by Block
+```{r}
+summary(total$BLOCK)
+```
+
+####Type by block table
+```{r}
+output.r <- dcast(total, BLOCK ~ TYPE, value.var = "TYPE")
+head(output.r)
+```
+
+####Type by tract table
+```{r}
+output.r2 <- dcast(total, TRACT ~ TYPE, value.var = "TYPE")
+head(output.r2)
+```
+
+####Making a dataframe that only includes block and income to join onto the type by tract table
+```{r}
+#creating a dataframe to merge median income with tract and block
+total2 <- total
+total2$LONGITUDE <- NULL
+total2$LATITUDE <- NULL
+total2$TYPE <- NULL
+total2$REPORTDATE <- NULL
+total2$TRACT <- NULL
+#creating a dataframe to merge with tract by type table
+total3 <- total
+total3$LONGITUDE <- NULL
+total3$LATITUDE <- NULL
+total3$TYPE <- NULL
+total3$REPORTDATE <- NULL
+total3$BLOCK <- NULL
+```
+
+####Here was what happened when I tried to merge blocks with median income
+```{r}
+total.f <- merge(output.r,total2,by=c("BLOCK"))
+head(total.f)
+```
+
+- The problem here is that there are multiple median incomes for some blocks as some blocks overlap into multiple census tracts that have different median incomes. This means that any regression involving median income must exclude blocks and use census tracts instead.
+
+####Creating a Type by tract table that includes median income
+```{r}
+total.f2 <- merge(output.r2,total3,by=c("TRACT"))
+total.f3 <- total.f2[!duplicated(total.f2), ]
+head(total.f3)
+```
+
+##Regression
+```{r}
+#The effect of violations on crashes
+ex.lm <- lm(Crash ~ Violation, data=output.r)
+summary(ex.lm)
+par(mfrow=c(2,2))
+plot(ex.lm)
+```
+- The p-value for this relationship is .00302 which is very significant.
+
+```{r}
+#The effect of violations and cameras on crashes
+ex.lm2 <- lm(Crash ~ Violation + Camera, data=output.r)
+summary(ex.lm2)
+par(mfrow=c(2,2))
+plot(ex.lm2)
+```
+
+- The p-value for this relationship is .00302 which is very significant.
+
+```{r}
+#The effect of crashes and cameras on violations
+ex.lm3 <- lm(Violation ~ Crash + Camera, data=output.r)
+summary(ex.lm3)
+par(mfrow=c(2,2))
+plot(ex.lm3)
+```
+
+- The p-value for this relationship is 0.00483 which is very significant.
+
+```{r}
+#The effect of the median income of a tract on violations.
+ex.lm4 <- lm(Violation ~ Median_income, data=total.f3)
+summary(ex.lm4)
+par(mfrow=c(2,2))
+plot(ex.lm4)
+```
+
+- The effect of median income of a tract does not have a significant p-value at 0.942 suggesting the relationship is not significant.
+
+```{r}
+#The effect of the median income of a tract on crashes.
+ex.lm5 <- lm(Crash ~ Median_income, data=total.f3)
+summary(ex.lm5)
+par(mfrow=c(2,2))
+plot(ex.lm5)
+```
+
+- Similar to violation, the effect of median income of a tract does not have a significant p-value at 0.944 suggesting the relationship is not significant.
+
+```{r}
+#The effect of the median income of a tract on cameras.
+ex.lm6 <- lm(Camera ~ Median_income, data=total.f3)
+summary(ex.lm6)
+par(mfrow=c(2,2))
+plot(ex.lm6)
+```
+
+- Here the effect of median income does have a relationship with cameras as the p-value is .04 which is statistically significant.
+
+```{r}
+#The effect of the Violations, Cameras, and the Median income of a tract on crashes.
+ex.lm7 <- lm(Crash ~ Violation + Camera + Median_income, data=total.f3)
+summary(ex.lm7)
+par(mfrow=c(2,2))
+plot(ex.lm7)
+```
+
+- The p-value of 8.57e-08 suggests that the amount of violations, cameras and median_income of a tract have a relationship with crashes.
+
+```{r}
+#The effect of the Crashes, Cameras, and the Median income of a tract on violations.
+ex.lm8 <- lm(Violation ~ Crash + Camera + Median_income, data=total.f3)
+summary(ex.lm8)
+par(mfrow=c(2,2))
+plot(ex.lm8)
+```
+
+- The p-value of 0.000235 suggests that the amount of crashes, cameras and median_income of a tract have a relationship with violations.
+
+####Regression diagnostics for a full model
+```{r}
+#testing normality
+t = rstudent(ex.lm7)
+shapiro.test(t)
+#Outlier test
+outlierTest(ex.lm7)
+#Testing homeoscedasticity
+ncvTest(ex.lm7)
+#Testing the variance inflation factors
+vif(ex.lm7)
+```
+
+- Above I conducted some regression diagnostics on the full model to make sure assumptions of normality, and homeoscedasticity are met. Based on these tests, I can reasonably tell that the assumptions were met in the full model.
+
+##Conclusions
+
+Based on the above regression analysis, I can answer some of my questions, hypothesis, and approach what my analysis could mean under a larger context. Do areas in the District with more traffic violations tend to have more accidents? Yes, the relationship between crashes and violations was statistically significant at .00302. Does the median income of a census tract tend to be correlated with more accidents or violations? No, the p-values between median income as the sole predictor did not produce a significant relationship between violations or crashes. However, when added in conjunction with other variables to produce a full model, median income was a predictor in the most significant model. As for my explanatory questions, I had some promising results. For the "Do blocks in the District with cameras tend to have fewer accidents or crashes?" question, the relationship between them was significant but significant for the inverse. Here the result showed that the presence of cameras led to more accidents or violations. I think this can be attributed to the fact DC is covered well with cameras and there weren't many violations where a camera was present and if there were multiple cameras then they were in areas prone to more accidents. This is a classic chicken and egg argument that which leads me to believe that I cannot reject the null hypothesis for my explanatory questions.  The most significant result I found was in my analysis was that a full model of the relationship of Violations, Cameras, and Median Income on Crashes was very significant at 8.57e-08. This leads me to believe that areas like downtown where road infrastructure is more densely compact, violations and crashes are higher leads to more camera implementation. Additonally, the residents who can afford to live downtown have a higher median income, which could perhaps lend itself to lobbying for more traffic cameras in the neighborhood.
+
